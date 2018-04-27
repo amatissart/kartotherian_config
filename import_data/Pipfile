@@ -7,12 +7,13 @@ name = "pypi"
 
 [dev-packages]
 
+ipython = "*"
 
 
 [packages]
-# we point to a particular commit because invoke might break retrocompatibility.
-# if we update this ref we need to check that everything is still working
-invoke = {git = "https://github.com/pyinvoke/invoke", ref = "a78fa6e037e538b19b2791c669ead5fcabad7951", editable = true}
+
+invoke = "==0.22.1"
+luigi = ">=2.7"
 
 
 [requires]
