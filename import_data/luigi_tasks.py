@@ -1,11 +1,9 @@
 import luigi
-import time
 import invoke
 from invoke import Context, Config
 
 import tasks as invoke_tasks
 
-OSM_FILE = '/data/osm.pbf'
 
 class InvokeContext:
     @classmethod
@@ -15,14 +13,21 @@ class InvokeContext:
         return Context(conf)
 
 
+class importOsmConfig(luigi.Config):
+    seed = luigi.Parameter()
+    pbf_url = luigi.Parameter()
+    osm_file = luigi.Parameter()
+
+
 class ImportPipelineTask(luigi.Task):
-    seed = luigi.Parameter(positional=False)
-    pbf_url = luigi.OptionalParameter(positional=False)
+    def __init__(self):
+        self.config = importOsmConfig()
+        super().__init__()
 
     def output(self):
         return luigi.LocalTarget(
             path='/tmp/import_pipeline/{seed}/{task_name}.done'.format(
-                seed=self.seed,
+                seed=self.config.seed,
                 task_name=self.__class__.__name__
             )
         )
@@ -39,10 +44,10 @@ class ImportPipelineTask(luigi.Task):
 #########################
 
 class DownloadPbfTask(ImportPipelineTask):
-    osm_file = luigi.Parameter(default=OSM_FILE)
+    osm_file = luigi.Parameter()
 
     def run(self):
-        invoke.run(f'wget {self.pbf_url} -O {self.osm_file}')
+        invoke.run(f'wget {self.config.pbf_url} -O {self.osm_file}')
 
     def output(self):
         return luigi.LocalTarget(
@@ -51,10 +56,8 @@ class DownloadPbfTask(ImportPipelineTask):
 
 
 class LoadBaseMapTask(ImportPipelineTask):
-    osm_file = luigi.Parameter(default=OSM_FILE)
-
     def requires(self):
-        yield self.clone(cls=DownloadPbfTask, osm_file=self.osm_file)
+        yield DownloadPbfTask(osm_file=self.config.osm_file)
 
     def run(self):
         invoke_context = InvokeContext.get()
@@ -63,10 +66,8 @@ class LoadBaseMapTask(ImportPipelineTask):
 
 
 class LoadPoiTask(ImportPipelineTask):
-    osm_file = luigi.Parameter(default=OSM_FILE)
-
     def requires(self):
-        yield self.clone(cls=DownloadPbfTask, osm_file=self.osm_file)
+        yield DownloadPbfTask(osm_file=self.config.osm_file)
 
     def run(self):
         invoke_context = InvokeContext.get()
@@ -76,8 +77,8 @@ class LoadPoiTask(ImportPipelineTask):
 
 class LoadOmtSqlTask(ImportPipelineTask):
     def requires(self):
-        yield self.clone(cls=LoadBaseMapTask)
-        yield self.clone(cls=LoadPoiTask)
+        yield LoadBaseMapTask()
+        yield LoadPoiTask()
 
     def run(self):
         self.invoke_task_and_write_output('run_sql_script')
@@ -105,11 +106,11 @@ class LoadBorderTask(ImportPipelineTask):
 
 class PostSqlTask(ImportPipelineTask):
     def requires(self):
-        yield self.clone(LoadOmtSqlTask)
-        yield self.clone(LoadNaturalEarthTask)
-        yield self.clone(LoadWaterTask)
-        yield self.clone(LoadLakeTask)
-        yield self.clone(LoadBorderTask)
+        yield LoadOmtSqlTask()
+        yield LoadNaturalEarthTask()
+        yield LoadWaterTask()
+        yield LoadLakeTask()
+        yield LoadBorderTask()
 
     def run(self):
         self.invoke_task_and_write_output('run_post_sql_scripts')
@@ -119,7 +120,7 @@ class GenerateTiles(ImportPipelineTask):
     # tilerator_api_url = luigi.Parameter()
 
     def requires(self):
-        yield self.clone(PostSqlTask)
+        yield PostSqlTask()
 
     def run(self):
         print('Generating tiles....')
