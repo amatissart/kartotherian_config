@@ -1,6 +1,9 @@
 import luigi
+import requests
 import invoke
 from invoke import Context, Config
+from datetime import datetime, timedelta
+import os.path
 
 import tasks as invoke_tasks
 
@@ -28,7 +31,7 @@ class ImportPipelineTask(luigi.Task):
         return luigi.LocalTarget(
             path='/tmp/import_pipeline/{import_id}/{task_name}.done'.format(
                 import_id=self.config.import_id,
-                task_name=self.__class__.__name__
+                task_name=self.task_id
             )
         )
 
@@ -40,19 +43,50 @@ class ImportPipelineTask(luigi.Task):
             output.write('')
 
 
-### Pipeline Tasks
-#########################
+###############################################################
+# Pipeline Tasks
 
 class DownloadPbfTask(ImportPipelineTask):
     osm_file = luigi.Parameter()
+    force = luigi.BoolParameter(default=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.force:
+            output = self.output()
+            if output.exists():
+                output.move(f'{output.path}.bak')
 
     def run(self):
         invoke.run(f'wget {self.config.pbf_url} -O {self.osm_file}')
 
     def output(self):
-        return luigi.LocalTarget(
-            path=self.osm_file
+        return luigi.LocalTarget(path=self.osm_file)
+
+    def complete(self):
+        """
+        Download is 'complete' if the pbf exists and is up-to-date
+        compared to the server file (with 2-days tolerance)
+        """
+        if not self.output.exists():
+            return False
+        file_mtime = datetime.utcfromtimestamp(
+            os.path.getmtime(self.output.path)
         )
+        server_head = requests.head(self.config.pbf_url)
+        server_last_modified = server_head.headers.get('Last-Modified')
+
+        if server_last_modified is None:
+            # Server does not return "Last-Modified" date
+            # Let's assume the file is up-to-date
+            # (that prevents dependencies error)
+            return True
+
+        server_mtime = datetime.strptime(
+            server_last_modified,
+            '%a, %d %b %Y %H:%M:%S %Z'
+        )
+        return server_mtime - file_mtime < timedelta(days=2)
 
 
 class LoadBaseMapTask(ImportPipelineTask):
@@ -116,11 +150,68 @@ class PostSqlTask(ImportPipelineTask):
         self.invoke_task_and_write_output('run_post_sql_scripts')
 
 
-class GenerateTiles(ImportPipelineTask):
-    # tilerator_api_url = luigi.Parameter()
-
+class InitialImport(luigi.WrapperTask):
     def requires(self):
         yield PostSqlTask()
 
+
+class GenerateTiles(ImportPipelineTask):
+    tilerator_url = luigi.Parameter()
+    zoom = luigi.OptionalParameter(default=None)
+    tile_x = luigi.IntParameter(default=0)
+    tile_y = luigi.IntParameter(default=0)
+    parts = luigi.IntParameter(default=80)
+
+    def requires(self):
+        yield InitialImport()
+
+    def post_tilerator_jobs(params):
+        requests.post(
+            url=f'{self.tilerator_url}/add',
+            params=query
+        )
+
     def run(self):
-        print('Generating tiles....')
+        print('Create tiles jobs....')
+        basemap_query = {
+            'generatorId': 'substbasemap',
+            'storageId': 'basemap',
+            'fromZoom': 0,
+            'beforeZoom': 15,
+            'keepJob': 'true',
+            'deleteEmpty':'true',
+            'parts': self.parts,
+        }
+        poi_query = {
+            'generatorId': 'gen_poi',
+            'storageId': 'poi',
+            'fromZoom': 14,
+            'beforeZoom': 15,
+            'keepJob': 'true',
+            'deleteEmpty':'true',
+            'parts': self.parts,
+        }
+        if self.zoom is not None:
+            for q in [basemap_query, poi_query]:
+                q['zoom'] = self.zoom
+                q['x'] = self.tile_x
+                q['y'] = self.tile_y
+
+        self.post_tilerator_jobs(params=basemap_query)
+        self.post_tilerator_jobs(params=poi_query)
+
+        with self.output().open('w') as output:
+            output.write('')
+
+
+class GenerateLuxembourgTiles(luigi.WrapperTask):
+    tilerator_url = luigi.Parameter()
+
+    def requires(self):
+        yield GenerateTiles(
+            tilerator_url=self.tilerator_url,
+            zoom=7,
+            tile_x=66,
+            tile_y=43,
+            parts=8
+        )
