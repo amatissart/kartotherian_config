@@ -16,20 +16,8 @@ class InvokeContext:
 
 
 class ImportPipelineTask(luigi.Task):
-    seed = luigi.OptionalParameter()
-    pbf_url = luigi.OptionalParameter()
-
-    def _requires(self):
-        """
-        Propagates 'seed' to required tasks where 
-        it's not defined explicitely
-        """
-        deps = super()._requires()
-        for t in deps:
-            for attr in ['seed', 'pbf_url']:
-                if getattr(t, attr) is None:
-                    setattr(t, attr, getattr(self, attr))
-        return deps
+    seed = luigi.Parameter(positional=False)
+    pbf_url = luigi.OptionalParameter(positional=False)
 
     def output(self):
         return luigi.LocalTarget(
@@ -66,7 +54,7 @@ class LoadBaseMapTask(ImportPipelineTask):
     osm_file = luigi.Parameter(default=OSM_FILE)
 
     def requires(self):
-        yield DownloadPbfTask(osm_file=self.osm_file)
+        yield self.clone(cls=DownloadPbfTask, osm_file=self.osm_file)
 
     def run(self):
         invoke_context = InvokeContext.get()
@@ -78,7 +66,7 @@ class LoadPoiTask(ImportPipelineTask):
     osm_file = luigi.Parameter(default=OSM_FILE)
 
     def requires(self):
-        yield DownloadPbfTask(osm_file=self.osm_file)
+        yield self.clone(cls=DownloadPbfTask, osm_file=self.osm_file)
 
     def run(self):
         invoke_context = InvokeContext.get()
@@ -87,11 +75,11 @@ class LoadPoiTask(ImportPipelineTask):
 
 
 class LoadOmtSqlTask(ImportPipelineTask):
-    def requires():
-        yield LoadBaseMapTask()
-        yield LoadPoiTask()
+    def requires(self):
+        yield self.clone(cls=LoadBaseMapTask)
+        yield self.clone(cls=LoadPoiTask)
 
-    def run():
+    def run(self):
         self.invoke_task_and_write_output('run_sql_script')
 
 
@@ -117,11 +105,11 @@ class LoadBorderTask(ImportPipelineTask):
 
 class PostSqlTask(ImportPipelineTask):
     def requires(self):
-        yield LoadOmtSqlTask()
-        yield LoadNaturalEarthTask()
-        yield LoadWaterTask()
-        yield LoadLakeTask()
-        yield LoadBorderTask()
+        yield self.clone(LoadOmtSqlTask)
+        yield self.clone(LoadNaturalEarthTask)
+        yield self.clone(LoadWaterTask)
+        yield self.clone(LoadLakeTask)
+        yield self.clone(LoadBorderTask)
 
     def run(self):
         self.invoke_task_and_write_output('run_post_sql_scripts')
@@ -131,7 +119,7 @@ class GenerateTiles(ImportPipelineTask):
     # tilerator_api_url = luigi.Parameter()
 
     def requires(self):
-        yield PostSqlTask()
+        yield self.clone(PostSqlTask)
 
     def run(self):
         print('Generating tiles....')
