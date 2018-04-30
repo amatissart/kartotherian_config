@@ -14,7 +14,7 @@ class InvokeContext:
 
 
 class importOsmConfig(luigi.Config):
-    seed = luigi.Parameter()
+    import_id = luigi.Parameter()
     pbf_url = luigi.Parameter()
     osm_file = luigi.Parameter()
 
@@ -26,8 +26,8 @@ class ImportPipelineTask(luigi.Task):
 
     def output(self):
         return luigi.LocalTarget(
-            path='/tmp/import_pipeline/{seed}/{task_name}.done'.format(
-                seed=self.config.seed,
+            path='/tmp/import_pipeline/{import_id}/{task_name}.done'.format(
+                import_id=self.config.import_id,
                 task_name=self.__class__.__name__
             )
         )
@@ -61,7 +61,7 @@ class LoadBaseMapTask(ImportPipelineTask):
 
     def run(self):
         invoke_context = InvokeContext.get()
-        invoke_context.osm_file = self.osm_file
+        invoke_context.osm_file = self.config.osm_file
         self.invoke_task_and_write_output('import_basemap', ctx=invoke_context)
 
 
@@ -71,7 +71,7 @@ class LoadPoiTask(ImportPipelineTask):
 
     def run(self):
         invoke_context = InvokeContext.get()
-        invoke_context.osm_file = self.osm_file
+        invoke_context.osm_file = self.config.osm_file
         self.invoke_task_and_write_output('import_poi', ctx=invoke_context)
 
 
