@@ -62,7 +62,7 @@ class LoadBaseMapTask(ImportPipelineTask):
     def run(self):
         invoke_context = InvokeContext.get()
         invoke_context.osm_file = self.config.osm_file
-        self.invoke_task_and_write_output('import_basemap', ctx=invoke_context)
+        self.invoke_task_and_write_output('load_basemap', ctx=invoke_context)
 
 
 class LoadPoiTask(ImportPipelineTask):
@@ -72,7 +72,7 @@ class LoadPoiTask(ImportPipelineTask):
     def run(self):
         invoke_context = InvokeContext.get()
         invoke_context.osm_file = self.config.osm_file
-        self.invoke_task_and_write_output('import_poi', ctx=invoke_context)
+        self.invoke_task_and_write_output('load_poi', ctx=invoke_context)
 
 
 class LoadOmtSqlTask(ImportPipelineTask):
