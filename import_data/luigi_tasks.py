@@ -1,9 +1,9 @@
+import os.path
 import luigi
 import requests
 import invoke
 from invoke import Context, Config
 from datetime import datetime, timedelta
-import os.path
 
 import tasks as invoke_tasks
 
@@ -65,13 +65,13 @@ class DownloadPbfTask(ImportPipelineTask):
 
     def complete(self):
         """
-        Download is 'complete' if the pbf exists and is up-to-date
-        compared to the server file (with 2-days tolerance)
+        Download is 'complete' if the pbf file exists and is
+        up-to-date compared to the server file (with 2-days tolerance)
         """
-        if not self.output.exists():
+        if not self.output().exists():
             return False
         file_mtime = datetime.utcfromtimestamp(
-            os.path.getmtime(self.output.path)
+            os.path.getmtime(self.output().path)
         )
         server_head = requests.head(self.config.pbf_url)
         server_last_modified = server_head.headers.get('Last-Modified')
@@ -165,11 +165,12 @@ class GenerateTiles(ImportPipelineTask):
     def requires(self):
         yield InitialImport()
 
-    def post_tilerator_jobs(params):
-        requests.post(
+    def post_tilerator_jobs(self, params):
+        resp = requests.post(
             url=f'{self.tilerator_url}/add',
-            params=query
+            params=params
         )
+        resp.raise_for_status()
 
     def run(self):
         print('Create tiles jobs....')
@@ -202,16 +203,3 @@ class GenerateTiles(ImportPipelineTask):
 
         with self.output().open('w') as output:
             output.write('')
-
-
-class GenerateLuxembourgTiles(luigi.WrapperTask):
-    tilerator_url = luigi.Parameter()
-
-    def requires(self):
-        yield GenerateTiles(
-            tilerator_url=self.tilerator_url,
-            zoom=7,
-            tile_x=66,
-            tile_y=43,
-            parts=8
-        )
