@@ -20,9 +20,9 @@ class importOsmConfig(luigi.Config):
 
 
 class ImportPipelineTask(luigi.Task):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.config = importOsmConfig()
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def output(self):
         return luigi.LocalTarget(
