@@ -630,3 +630,4 @@ tags:
     'name:sv', 'name:th', 'name:tr', 'name:uk', 'name:zh', int_name, loc_name, name,
     wikidata, wikipedia]
 
+use_single_id_space: true
