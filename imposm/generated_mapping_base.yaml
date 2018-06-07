@@ -481,6 +481,22 @@ tables:
         retail]
       leisure: [stadium, pitch, playground]
     type: polygon
+  marine_point:
+    fields:
+    - {name: osm_id, type: id}
+    - {name: geometry, type: geometry}
+    - {key: name, name: name, type: string}
+    - {key: 'name:en', name: name_en, type: string}
+    - {key: 'name:de', name: name_de, type: string}
+    - {name: tags, type: hstore_tags}
+    - {key: place, name: place, type: string}
+    - {key: rank, name: rank, type: integer}
+    filters:
+      require:
+        name: [__any__]
+    mapping:
+      place: [ocean, sea]
+    type: point
   park_polygon:
     fields:
     - {name: osm_id, type: id}

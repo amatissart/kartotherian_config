@@ -1624,6 +1624,230 @@ RETURNS TABLE(geometry geometry, osm_id bigint) AS $$
 $$ LANGUAGE SQL IMMUTABLE;
 
 -- not handled: where a building outline covers building parts
+DO $$ BEGIN RAISE NOTICE 'Layer water_name'; END$$;DROP TRIGGER IF EXISTS trigger_flag ON osm_marine_point;
+DROP TRIGGER IF EXISTS trigger_refresh ON water_name_marine.updates;
+
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+CREATE OR REPLACE FUNCTION update_osm_marine_point() RETURNS VOID AS $$
+BEGIN
+  -- etldoc: osm_marine_point          -> osm_marine_point
+  UPDATE osm_marine_point AS osm SET "rank" = NULL WHERE "rank" IS NOT NULL;
+
+  -- etldoc: ne_10m_geography_marine_polys -> osm_marine_point
+  -- etldoc: osm_marine_point              -> osm_marine_point
+
+  WITH important_marine_point AS (
+      SELECT osm.geometry, osm.osm_id, osm.name, osm.name_en, ne.scalerank
+      FROM ne_10m_geography_marine_polys AS ne, osm_marine_point AS osm
+      WHERE ne.name ILIKE osm.name
+  )
+  UPDATE osm_marine_point AS osm
+  SET "rank" = scalerank
+  FROM important_marine_point AS ne
+  WHERE osm.osm_id = ne.osm_id;
+
+  UPDATE osm_marine_point
+  SET tags = update_tags(tags, geometry)
+  WHERE COALESCE(tags->'name:latin', tags->'name:nonlatin', tags->'name_int') IS NULL;
+
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT update_osm_marine_point();
+
+CREATE INDEX IF NOT EXISTS osm_marine_point_rank_idx ON osm_marine_point("rank");
+
+-- Handle updates
+CREATE SCHEMA IF NOT EXISTS water_name_marine;
+
+CREATE TABLE IF NOT EXISTS water_name_marine.updates(id serial primary key, t text, unique (t));
+CREATE OR REPLACE FUNCTION water_name_marine.flag() RETURNS trigger AS $$
+BEGIN
+    INSERT INTO water_name_marine.updates(t) VALUES ('y')  ON CONFLICT(t) DO NOTHING;
+    RETURN null;
+END;
+$$ language plpgsql;
+
+CREATE OR REPLACE FUNCTION water_name_marine.refresh() RETURNS trigger AS
+  $BODY$
+  BEGIN
+    RAISE LOG 'Refresh water_name_marine rank';
+    PERFORM update_osm_marine_point();
+    DELETE FROM water_name_marine.updates;
+    RETURN null;
+  END;
+  $BODY$
+language plpgsql;
+
+CREATE TRIGGER trigger_flag
+    AFTER INSERT OR UPDATE OR DELETE ON osm_marine_point
+    FOR EACH STATEMENT
+    EXECUTE PROCEDURE water_name_marine.flag();
+
+CREATE CONSTRAINT TRIGGER trigger_refresh
+    AFTER INSERT ON water_name_marine.updates
+    INITIALLY DEFERRED
+    FOR EACH ROW
+    EXECUTE PROCEDURE water_name_marine.refresh();
+DROP TRIGGER IF EXISTS trigger_flag_line ON osm_water_polygon;
+DROP TRIGGER IF EXISTS trigger_refresh ON water_lakeline.updates;
+
+-- etldoc:  osm_water_polygon ->  osm_water_lakeline
+-- etldoc:  lake_centerline  ->  osm_water_lakeline
+DROP MATERIALIZED VIEW IF EXISTS osm_water_lakeline CASCADE;
+
+CREATE MATERIALIZED VIEW osm_water_lakeline AS (
+	SELECT wp.osm_id,
+		ll.wkb_geometry AS geometry,
+		name, name_en, name_de,
+		update_tags(tags, ll.wkb_geometry) AS tags,
+		ST_Area(wp.geometry) AS area
+    FROM osm_water_polygon AS wp
+    INNER JOIN lake_centerline ll ON wp.osm_id = ll.osm_id
+    WHERE wp.name <> ''
+);
+CREATE INDEX IF NOT EXISTS osm_water_lakeline_geometry_idx ON osm_water_lakeline USING gist(geometry);
+
+-- Handle updates
+
+CREATE SCHEMA IF NOT EXISTS water_lakeline;
+
+CREATE TABLE IF NOT EXISTS water_lakeline.updates(id serial primary key, t text, unique (t));
+CREATE OR REPLACE FUNCTION water_lakeline.flag() RETURNS trigger AS $$
+BEGIN
+    INSERT INTO water_lakeline.updates(t) VALUES ('y')  ON CONFLICT(t) DO NOTHING;
+    RETURN null;
+END;
+$$ language plpgsql;
+
+CREATE OR REPLACE FUNCTION water_lakeline.refresh() RETURNS trigger AS
+  $BODY$
+  BEGIN
+    RAISE LOG 'Refresh water_lakeline';
+    REFRESH MATERIALIZED VIEW osm_water_lakeline;
+    DELETE FROM water_lakeline.updates;
+    RETURN null;
+  END;
+  $BODY$
+language plpgsql;
+
+CREATE TRIGGER trigger_flag_line
+    AFTER INSERT OR UPDATE OR DELETE ON osm_water_polygon
+    FOR EACH STATEMENT
+    EXECUTE PROCEDURE water_lakeline.flag();
+
+CREATE CONSTRAINT TRIGGER trigger_refresh
+    AFTER INSERT ON water_lakeline.updates
+    INITIALLY DEFERRED
+    FOR EACH ROW
+    EXECUTE PROCEDURE water_lakeline.refresh();
+DROP TRIGGER IF EXISTS trigger_flag_point ON osm_water_polygon;
+DROP TRIGGER IF EXISTS trigger_refresh ON water_point.updates;
+
+-- etldoc:  osm_water_polygon ->  osm_water_point
+-- etldoc:  lake_centerline ->  osm_water_point
+DROP MATERIALIZED VIEW IF EXISTS  osm_water_point CASCADE;
+
+CREATE MATERIALIZED VIEW osm_water_point AS (
+    SELECT
+        wp.osm_id, ST_PointOnSurface(wp.geometry) AS geometry,
+        wp.name, wp.name_en, wp.name_de,
+        update_tags(wp.tags, ST_PointOnSurface(wp.geometry)) AS tags,
+        ST_Area(wp.geometry) AS area
+    FROM osm_water_polygon AS wp
+    LEFT JOIN lake_centerline ll ON wp.osm_id = ll.osm_id
+    WHERE ll.osm_id IS NULL AND wp.name <> ''
+);
+CREATE INDEX IF NOT EXISTS osm_water_point_geometry_idx ON osm_water_point USING gist (geometry);
+
+-- Handle updates
+
+CREATE SCHEMA IF NOT EXISTS water_point;
+
+CREATE TABLE IF NOT EXISTS water_point.updates(id serial primary key, t text, unique (t));
+CREATE OR REPLACE FUNCTION water_point.flag() RETURNS trigger AS $$
+BEGIN
+    INSERT INTO water_point.updates(t) VALUES ('y')  ON CONFLICT(t) DO NOTHING;
+    RETURN null;
+END;
+$$ language plpgsql;
+
+CREATE OR REPLACE FUNCTION water_point.refresh() RETURNS trigger AS
+  $BODY$
+  BEGIN
+    RAISE LOG 'Refresh water_point';
+    REFRESH MATERIALIZED VIEW osm_water_point;
+    DELETE FROM water_point.updates;
+    RETURN null;
+  END;
+  $BODY$
+language plpgsql;
+
+CREATE TRIGGER trigger_flag_point
+    AFTER INSERT OR UPDATE OR DELETE ON osm_water_polygon
+    FOR EACH STATEMENT
+    EXECUTE PROCEDURE water_point.flag();
+
+CREATE CONSTRAINT TRIGGER trigger_refresh
+    AFTER INSERT ON water_point.updates
+    INITIALLY DEFERRED
+    FOR EACH ROW
+    EXECUTE PROCEDURE water_point.refresh();
+
+-- etldoc: layer_water_name[shape=record fillcolor=lightpink, style="rounded,filled",
+-- etldoc:     label="layer_water_name | <z0_8> z0_8 | <z9_13> z9_13 | <z14_> z14+" ] ;
+
+CREATE OR REPLACE FUNCTION layer_water_name(bbox geometry, zoom_level integer)
+RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de text, tags hstore, class text) AS $$
+    -- etldoc: osm_water_lakeline ->  layer_water_name:z9_13
+    -- etldoc: osm_water_lakeline ->  layer_water_name:z14_
+    SELECT
+    CASE WHEN osm_id<0 THEN -osm_id*10+4
+        ELSE osm_id*10+1
+    END AS osm_id_hash,
+    geometry, name,
+    COALESCE(NULLIF(name_en, ''), name) AS name_en,
+    COALESCE(NULLIF(name_de, ''), name, name_en) AS name_de,
+    tags,
+    'lake'::text AS class
+    FROM osm_water_lakeline
+    WHERE geometry && bbox
+      AND ((zoom_level BETWEEN 9 AND 13 AND LineLabel(zoom_level, NULLIF(name, ''), geometry))
+        OR (zoom_level >= 14))
+    -- etldoc: osm_water_point ->  layer_water_name:z9_13
+    -- etldoc: osm_water_point ->  layer_water_name:z14_
+    UNION ALL
+    SELECT
+    CASE WHEN osm_id<0 THEN -osm_id*10+4
+        ELSE osm_id*10+1
+    END AS osm_id_hash,
+    geometry, name,
+    COALESCE(NULLIF(name_en, ''), name) AS name_en,
+    COALESCE(NULLIF(name_de, ''), name, name_en) AS name_de,
+    tags,
+    'lake'::text AS class
+    FROM osm_water_point
+    WHERE geometry && bbox AND (
+        (zoom_level BETWEEN 9 AND 13 AND area > 70000*2^(20-zoom_level))
+        OR (zoom_level >= 14)
+    )
+    -- etldoc: osm_marine_point ->  layer_water_name:z0_8
+    -- etldoc: osm_marine_point ->  layer_water_name:z9_13
+    -- etldoc: osm_marine_point ->  layer_water_name:z14_
+    UNION ALL
+    SELECT osm_id*10, geometry, name,
+    COALESCE(NULLIF(name_en, ''), name) AS name_en,
+    COALESCE(NULLIF(name_de, ''), name, name_en) AS name_de,
+    tags,
+    place::text AS class
+    FROM osm_marine_point
+    WHERE geometry && bbox AND (
+        place = 'ocean'
+        OR (zoom_level >= "rank" AND "rank" IS NOT NULL)
+        OR (zoom_level >= 8)
+    );
+$$ LANGUAGE SQL IMMUTABLE;
 DO $$ BEGIN RAISE NOTICE 'Layer transportation_name'; END$$;DROP MATERIALIZED VIEW IF EXISTS osm_transportation_name_network CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS osm_transportation_name_linestring CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS osm_transportation_name_linestring_gen1 CASCADE;

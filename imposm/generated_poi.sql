@@ -270,13 +270,22 @@ CREATE MATERIALIZED VIEW osm_poi_stop_rank AS (
 
 ALTER TABLE osm_poi_point ADD COLUMN IF NOT EXISTS agg_stop INTEGER DEFAULT NULL;
 SELECT update_osm_poi_point_agg();
-CREATE OR REPLACE FUNCTION global_id_from_imposm(osm_id bigint)
+CREATE OR REPLACE FUNCTION osm_hash_from_imposm(imposm_id bigint)
+RETURNS bigint AS $$
+    SELECT CASE
+        WHEN imposm_id < -1e17 THEN (-imposm_id-1e17) * 10 + 4 -- Relation
+        WHEN imposm_id < 0 THEN  (-imposm_id) * 10 + 1 -- Way
+        ELSE imposm_id * 10 -- Node
+    END::bigint;
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION global_id_from_imposm(imposm_id bigint)
 RETURNS TEXT AS $$
     SELECT CONCAT(
         'osm:',
-        CASE WHEN osm_id < -1e17 THEN CONCAT('relation:', -osm_id-1e17)
-             WHEN osm_id < 0 THEN CONCAT('way:', -osm_id)
-             ELSE CONCAT('node:', osm_id)
+        CASE WHEN imposm_id < -1e17 THEN CONCAT('relation:', -imposm_id-1e17)
+             WHEN imposm_id < 0 THEN CONCAT('way:', -imposm_id)
+             ELSE CONCAT('node:', imposm_id)
         END
     );
 $$ LANGUAGE SQL IMMUTABLE;
@@ -307,7 +316,7 @@ RETURNS TABLE(osm_id bigint, global_id text, geometry geometry, name text, name_
         -- etldoc: osm_poi_point ->  layer_poi:z12
         -- etldoc: osm_poi_point ->  layer_poi:z13
         SELECT *,
-            osm_id*10 AS osm_id_hash,
+            osm_hash_from_imposm(osm_id) AS osm_id_hash,
             global_id_from_imposm(osm_id) as global_id
         FROM osm_poi_point
             WHERE geometry && bbox
@@ -318,7 +327,7 @@ RETURNS TABLE(osm_id bigint, global_id text, geometry geometry, name text, name_
 
         -- etldoc: osm_poi_point ->  layer_poi:z14_
         SELECT *,
-            osm_id*10 AS osm_id_hash,
+            osm_hash_from_imposm(osm_id) AS osm_id_hash,
             global_id_from_imposm(osm_id) as global_id
         FROM osm_poi_point
             WHERE geometry && bbox
@@ -329,9 +338,7 @@ RETURNS TABLE(osm_id bigint, global_id text, geometry geometry, name text, name_
         -- etldoc: osm_poi_polygon ->  layer_poi:z13
         SELECT *,
             NULL::INTEGER AS agg_stop,
-            CASE WHEN osm_id<0 THEN -osm_id*10+4
-                ELSE osm_id*10+1
-            END AS osm_id_hash,
+            osm_hash_from_imposm(osm_id) AS osm_id_hash,
             global_id_from_imposm(osm_id) as global_id
         FROM osm_poi_polygon
             WHERE geometry && bbox
@@ -343,9 +350,7 @@ RETURNS TABLE(osm_id bigint, global_id text, geometry geometry, name text, name_
         -- etldoc: osm_poi_polygon ->  layer_poi:z14_
         SELECT *,
             NULL::INTEGER AS agg_stop,
-            CASE WHEN osm_id<0 THEN -osm_id*10+4
-                ELSE osm_id*10+1
-            END AS osm_id_hash,
+            osm_hash_from_imposm(osm_id) AS osm_id_hash,
             global_id_from_imposm(osm_id) as global_id
         FROM osm_poi_polygon
             WHERE geometry && bbox
