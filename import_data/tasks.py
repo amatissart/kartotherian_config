@@ -68,6 +68,11 @@ def get_osm_data(ctx):
         )
     ctx.osm.file = new_osm_file
 
+def _get_imposm_options(ctx):
+    imposm_options = ''
+    if ctx.imposm.quiet:
+        imposm_options += '-quiet '
+    return imposm_options
 
 @task
 def load_basemap(ctx):
@@ -80,6 +85,7 @@ def load_basemap(ctx):
   -mapping {ctx.main_dir}/generated_mapping_base.yaml \
   -deployproduction -overwritecache \
   -optimize \
+  {_get_imposm_options(ctx)} \
   -diffdir {ctx.generated_files_dir}/diff/{TilesLayer.BASEMAP} -cachedir {ctx.generated_files_dir}/cache/{TilesLayer.BASEMAP}'
     )
 
@@ -95,6 +101,7 @@ def load_poi(ctx):
   -mapping {ctx.main_dir}/generated_mapping_poi.yaml \
   -deployproduction -overwritecache \
   -optimize \
+  {_get_imposm_options(ctx)} \
   -diffdir {ctx.generated_files_dir}/diff/{TilesLayer.POI} -cachedir {ctx.generated_files_dir}/cache/{TilesLayer.POI}'
     )
 

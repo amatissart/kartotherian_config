@@ -14,6 +14,9 @@ generated_files_dir: /data/imposm
 data_dir: /data
 update_tiles_dir: /data/update_tiles_data
 
+imposm:
+  quiet: true # if false, imposm will print progression every second
+
 osm:
   ## one of those value needs to be configured
   ## URL where to get the osm file
