@@ -5,6 +5,7 @@ $$ LANGUAGE SQL IMMUTABLE;
 DO $$ BEGIN RAISE NOTICE 'Layer water'; END$$;CREATE OR REPLACE FUNCTION water_class(waterway TEXT) RETURNS TEXT AS $$
     SELECT CASE
            WHEN waterway='' THEN 'lake'
+           WHEN waterway='lake' THEN 'lake'
            WHEN waterway='dock' THEN 'dock'
            ELSE 'river'
    END;
@@ -14,122 +15,131 @@ $$ LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE VIEW water_z0 AS (
     -- etldoc:  ne_110m_ocean ->  water_z0
-    SELECT geometry, 'ocean'::text AS class FROM ne_110m_ocean
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM ne_110m_ocean
     UNION ALL
     -- etldoc:  ne_110m_lakes ->  water_z0
-    SELECT geometry, 'lake'::text AS class FROM ne_110m_lakes
+    SELECT geometry, 'lake'::text AS class, NULL::boolean AS is_intermittent FROM ne_110m_lakes
 );
 
 CREATE OR REPLACE VIEW water_z1 AS (
     -- etldoc:  ne_110m_ocean ->  water_z1
-    SELECT geometry, 'ocean'::text AS class FROM ne_110m_ocean
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM ne_110m_ocean
     UNION ALL
     -- etldoc:  ne_110m_lakes ->  water_z1
-    SELECT geometry, 'lake'::text AS class FROM ne_110m_lakes
+    SELECT geometry, 'lake'::text AS class, NULL::boolean AS is_intermittent FROM ne_110m_lakes
 );
 
 CREATE OR REPLACE VIEW water_z2 AS (
     -- etldoc:  ne_50m_ocean ->  water_z2
-    SELECT geometry, 'ocean'::text AS class FROM ne_50m_ocean
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM ne_50m_ocean
     UNION ALL
     -- etldoc:  ne_50m_lakes ->  water_z2
-    SELECT geometry, 'lake'::text AS class FROM ne_50m_lakes
+    SELECT geometry, 'lake'::text AS class, NULL::boolean AS is_intermittent FROM ne_50m_lakes
 );
 
 CREATE OR REPLACE VIEW water_z4 AS (
     -- etldoc:  ne_50m_ocean ->  water_z4
-    SELECT geometry, 'ocean'::text AS class FROM ne_50m_ocean
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM ne_50m_ocean
     UNION ALL
     -- etldoc:  ne_50m_lakes ->  water_z4
-    SELECT geometry, 'lake'::text AS class FROM ne_50m_lakes
+    SELECT geometry, 'lake'::text AS class, NULL::boolean AS is_intermittent FROM ne_50m_lakes
 );
 
 CREATE OR REPLACE VIEW water_z5 AS (
     -- etldoc:  ne_10m_ocean ->  water_z5
-    SELECT geometry, 'ocean'::text AS class FROM ne_10m_ocean
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM ne_10m_ocean
     UNION ALL
     -- etldoc:  ne_10m_lakes ->  water_z5
-    SELECT geometry, 'lake'::text AS class FROM ne_10m_lakes
+    SELECT geometry, 'lake'::text AS class, NULL::boolean AS is_intermittent FROM ne_10m_lakes
 );
 
 CREATE OR REPLACE VIEW water_z6 AS (
     -- etldoc:  ne_10m_ocean ->  water_z6
-    SELECT geometry, 'ocean'::text AS class FROM ne_10m_ocean
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM ne_10m_ocean
     UNION ALL
    -- etldoc:  osm_water_polygon_gen6 ->  water_z6
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon_gen6
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon_gen6
+    WHERE "natural" != 'bay'
 );
 
 CREATE OR REPLACE VIEW water_z7 AS (
     -- etldoc:  ne_10m_ocean ->  water_z7
-    SELECT geometry, 'ocean'::text AS class FROM ne_10m_ocean
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM ne_10m_ocean
     UNION ALL
     -- etldoc:  osm_water_polygon_gen5 ->  water_z7
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon_gen5
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon_gen5
+    WHERE "natural" != 'bay'
 );
 
 CREATE OR REPLACE VIEW water_z8 AS (
     -- etldoc:  osm_ocean_polygon_gen4 ->  water_z8
-    SELECT geometry, 'ocean'::text AS class FROM osm_ocean_polygon_gen4
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM osm_ocean_polygon_gen4
     UNION ALL
     -- etldoc:  osm_water_polygon_gen4 ->  water_z8
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon_gen4
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon_gen4
+    WHERE "natural" != 'bay'
 );
 
 CREATE OR REPLACE VIEW water_z9 AS (
     -- etldoc:  osm_ocean_polygon_gen3 ->  water_z9
-    SELECT geometry, 'ocean'::text AS class FROM osm_ocean_polygon_gen3
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM osm_ocean_polygon_gen3
     UNION ALL
     -- etldoc:  osm_water_polygon_gen3 ->  water_z9
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon_gen3
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon_gen3
+    WHERE "natural" != 'bay'
 );
 
 CREATE OR REPLACE VIEW water_z10 AS (
     -- etldoc:  osm_ocean_polygon_gen2 ->  water_z10
-    SELECT geometry, 'ocean'::text AS class FROM osm_ocean_polygon_gen2
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM osm_ocean_polygon_gen2
     UNION ALL
     -- etldoc:  osm_water_polygon_gen2 ->  water_z10
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon_gen2
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon_gen2
+    WHERE "natural" != 'bay'
 );
 
 CREATE OR REPLACE VIEW water_z11 AS (
     -- etldoc:  osm_ocean_polygon_gen1 ->  water_z11
-    SELECT geometry, 'ocean'::text AS class FROM osm_ocean_polygon_gen1
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM osm_ocean_polygon_gen1
     UNION ALL
     -- etldoc:  osm_water_polygon_gen1 ->  water_z11
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon_gen1
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon_gen1
+    WHERE "natural" != 'bay'
 );
 
 CREATE OR REPLACE VIEW water_z12 AS (
     -- etldoc:  osm_ocean_polygon_gen1 ->  water_z12
-    SELECT geometry, 'ocean'::text AS class FROM osm_ocean_polygon
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM osm_ocean_polygon
     UNION ALL
     -- etldoc:  osm_water_polygon ->  water_z12
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon
+    WHERE "natural" != 'bay'
 );
 
 CREATE OR REPLACE VIEW water_z13 AS (
     -- etldoc:  osm_ocean_polygon ->  water_z13
-    SELECT geometry, 'ocean'::text AS class FROM osm_ocean_polygon
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM osm_ocean_polygon
     UNION ALL
     -- etldoc:  osm_water_polygon ->  water_z13
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon
+    WHERE "natural" != 'bay'
 );
 
 CREATE OR REPLACE VIEW water_z14 AS (
     -- etldoc:  osm_ocean_polygon ->  water_z14
-    SELECT geometry, 'ocean'::text AS class FROM osm_ocean_polygon
+    SELECT geometry, 'ocean'::text AS class, NULL::boolean AS is_intermittent FROM osm_ocean_polygon
     UNION ALL
     -- etldoc:  osm_water_polygon ->  water_z14
-    SELECT geometry, water_class(waterway) AS class FROM osm_water_polygon
+    SELECT geometry, water_class(waterway) AS class, is_intermittent FROM osm_water_polygon
+    WHERE "natural" != 'bay'
 );
 
 -- etldoc: layer_water [shape=record fillcolor=lightpink, style="rounded,filled",
 -- etldoc:     label="layer_water |<z0> z0|<z1>z1|<z2>z2|<z3>z3 |<z4> z4|<z5>z5|<z6>z6|<z7>z7| <z8> z8 |<z9> z9 |<z10> z10 |<z11> z11 |<z12> z12|<z13> z13|<z14_> z14+" ] ;
 
 CREATE OR REPLACE FUNCTION layer_water (bbox geometry, zoom_level int)
-RETURNS TABLE(geometry geometry, class text) AS $$
-    SELECT geometry, class::text FROM (
+RETURNS TABLE(geometry geometry, class text, intermittent int) AS $$
+    SELECT geometry, class::text, is_intermittent::int AS intermittent FROM (
         -- etldoc: water_z0 ->  layer_water:z0
         SELECT * FROM water_z0 WHERE zoom_level = 0
         UNION ALL
@@ -316,60 +326,60 @@ $$ LANGUAGE SQL IMMUTABLE STRICT;
 
 -- etldoc: ne_110m_rivers_lake_centerlines ->  waterway_z3
 CREATE OR REPLACE VIEW waterway_z3 AS (
-    SELECT geometry, 'river'::text AS class, NULL::text AS name, NULL::text AS name_en, NULL::text AS name_de, NULL::hstore AS tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    SELECT geometry, 'river'::text AS class, NULL::text AS name, NULL::text AS name_en, NULL::text AS name_de, NULL::hstore AS tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel, NULL::boolean AS is_intermittent
     FROM ne_110m_rivers_lake_centerlines
     WHERE featurecla = 'River'
 );
 
 -- etldoc: ne_50m_rivers_lake_centerlines ->  waterway_z4
 CREATE OR REPLACE VIEW waterway_z4 AS (
-    SELECT geometry, 'river'::text AS class, NULL::text AS name, NULL::text AS name_en, NULL::text AS name_de, NULL::hstore AS tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    SELECT geometry, 'river'::text AS class, NULL::text AS name, NULL::text AS name_en, NULL::text AS name_de, NULL::hstore AS tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel, NULL::boolean AS is_intermittent
     FROM ne_50m_rivers_lake_centerlines
     WHERE featurecla = 'River'
 );
 
 -- etldoc: ne_10m_rivers_lake_centerlines ->  waterway_z6
 CREATE OR REPLACE VIEW waterway_z6 AS (
-    SELECT geometry, 'river'::text AS class, NULL::text AS name, NULL::text AS name_en, NULL::text AS name_de, NULL::hstore AS tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    SELECT geometry, 'river'::text AS class, NULL::text AS name, NULL::text AS name_en, NULL::text AS name_de, NULL::hstore AS tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel, NULL::boolean AS is_intermittent
     FROM ne_10m_rivers_lake_centerlines
     WHERE featurecla = 'River'
 );
 
 -- etldoc: osm_important_waterway_linestring_gen3 ->  waterway_z9
 CREATE OR REPLACE VIEW waterway_z9 AS (
-    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel, NULL::boolean AS is_intermittent
     FROM osm_important_waterway_linestring_gen3
 );
 
 -- etldoc: osm_important_waterway_linestring_gen2 ->  waterway_z10
 CREATE OR REPLACE VIEW waterway_z10 AS (
-    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel, NULL::boolean AS is_intermittent
     FROM osm_important_waterway_linestring_gen2
 );
 
 -- etldoc:osm_important_waterway_linestring_gen1 ->  waterway_z11
 CREATE OR REPLACE VIEW waterway_z11 AS (
-    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel
+    SELECT geometry, 'river'::text AS class, name, name_en, name_de, tags, NULL::boolean AS is_bridge, NULL::boolean AS is_tunnel, NULL::boolean AS is_intermittent
     FROM osm_important_waterway_linestring_gen1
 );
 
 -- etldoc: osm_waterway_linestring ->  waterway_z12
 CREATE OR REPLACE VIEW waterway_z12 AS (
-    SELECT geometry, waterway::text AS class, name, name_en, name_de, tags, is_bridge, is_tunnel
+    SELECT geometry, waterway::text AS class, name, name_en, name_de, tags, is_bridge, is_tunnel, is_intermittent
     FROM osm_waterway_linestring
     WHERE waterway IN ('river', 'canal')
 );
 
 -- etldoc: osm_waterway_linestring ->  waterway_z13
 CREATE OR REPLACE VIEW waterway_z13 AS (
-    SELECT geometry, waterway::text AS class, name, name_en, name_de, tags, is_bridge, is_tunnel
+    SELECT geometry, waterway::text AS class, name, name_en, name_de, tags, is_bridge, is_tunnel, is_intermittent
     FROM osm_waterway_linestring
     WHERE waterway IN ('river', 'canal', 'stream', 'drain', 'ditch')
 );
 
 -- etldoc: osm_waterway_linestring ->  waterway_z14
 CREATE OR REPLACE VIEW waterway_z14 AS (
-    SELECT geometry, waterway::text AS class, name, name_en, name_de, tags, is_bridge, is_tunnel
+    SELECT geometry, waterway::text AS class, name, name_en, name_de, tags, is_bridge, is_tunnel, is_intermittent
     FROM osm_waterway_linestring
 );
 
@@ -377,12 +387,13 @@ CREATE OR REPLACE VIEW waterway_z14 AS (
 -- etldoc:     label="layer_waterway | <z3> z3 |<z4_5> z4-z5 |<z6_8> z6-8 | <z9> z9 |<z10> z10 |<z11> z11 |<z12> z12|<z13> z13|<z14> z14+" ];
 
 CREATE OR REPLACE FUNCTION layer_waterway(bbox geometry, zoom_level int)
-RETURNS TABLE(geometry geometry, class text, name text, name_en text, name_de text, brunnel text, tags hstore) AS $$
+RETURNS TABLE(geometry geometry, class text, name text, name_en text, name_de text, brunnel text, intermittent int, tags hstore) AS $$
     SELECT geometry, class,
         NULLIF(name, '') AS name,
         COALESCE(NULLIF(name_en, ''), name) AS name_en,
         COALESCE(NULLIF(name_de, ''), name, name_en) AS name_de,
         waterway_brunnel(is_bridge, is_tunnel) AS brunnel,
+        is_intermittent::int AS intermittent,
         tags
     FROM (
         -- etldoc: waterway_z3 ->  layer_waterway:z3
@@ -561,56 +572,56 @@ RETURNS TABLE(osm_id bigint, geometry geometry, class text, subclass text) AS $$
 $$ LANGUAGE SQL IMMUTABLE;
 DO $$ BEGIN RAISE NOTICE 'Layer landuse'; END$$;-- etldoc: ne_50m_urban_areas -> landuse_z4
 CREATE OR REPLACE VIEW landuse_z4 AS (
-    SELECT NULL::bigint AS osm_id, geometry, 'residential'::text AS landuse, NULL::text AS amenity, NULL::text AS leisure, NULL::text AS tourism, scalerank
+    SELECT NULL::bigint AS osm_id, geometry, 'residential'::text AS landuse, NULL::text AS amenity, NULL::text AS leisure, NULL::text AS tourism, NULL::text AS place, scalerank
     FROM ne_50m_urban_areas
     WHERE scalerank <= 2
 );
 
 -- etldoc: ne_50m_urban_areas -> landuse_z5
 CREATE OR REPLACE VIEW landuse_z5 AS (
-    SELECT NULL::bigint AS osm_id, geometry, 'residential'::text AS landuse, NULL::text AS amenity, NULL::text AS leisure, NULL::text AS tourism, scalerank
+    SELECT NULL::bigint AS osm_id, geometry, 'residential'::text AS landuse, NULL::text AS amenity, NULL::text AS leisure, NULL::text AS tourism, NULL::text AS place, scalerank
     FROM ne_50m_urban_areas
 );
 
 -- etldoc: ne_10m_urban_areas -> landuse_z6
 CREATE OR REPLACE VIEW landuse_z6 AS (
-    SELECT NULL::bigint AS osm_id, geometry, 'residential'::text AS landuse, NULL::text AS amenity, NULL::text AS leisure, NULL::text AS tourism, scalerank
+    SELECT NULL::bigint AS osm_id, geometry, 'residential'::text AS landuse, NULL::text AS amenity, NULL::text AS leisure, NULL::text AS tourism, NULL::text AS place, scalerank
     FROM ne_10m_urban_areas
 );
 
 -- etldoc: osm_landuse_polygon_gen5 -> landuse_z9
 CREATE OR REPLACE VIEW landuse_z9 AS (
-    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, NULL::int as scalerank
+    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, place, NULL::int as scalerank
     FROM osm_landuse_polygon_gen5
 );
 
 -- etldoc: osm_landuse_polygon_gen4 -> landuse_z10
 CREATE OR REPLACE VIEW landuse_z10 AS (
-    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, NULL::int as scalerank
+    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, place, NULL::int as scalerank
     FROM osm_landuse_polygon_gen4
 );
 
 -- etldoc: osm_landuse_polygon_gen3 -> landuse_z11
 CREATE OR REPLACE VIEW landuse_z11 AS (
-    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, NULL::int as scalerank
+    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, place, NULL::int as scalerank
     FROM osm_landuse_polygon_gen3
 );
 
 -- etldoc: osm_landuse_polygon_gen2 -> landuse_z12
 CREATE OR REPLACE VIEW landuse_z12 AS (
-    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, NULL::int as scalerank
+    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, place, NULL::int as scalerank
     FROM osm_landuse_polygon_gen2
 );
 
 -- etldoc: osm_landuse_polygon_gen1 -> landuse_z13
 CREATE OR REPLACE VIEW landuse_z13 AS (
-    SELECT osm_id, geometry, landuse, amenity, leisure,tourism, NULL::int as scalerank
+    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, place, NULL::int as scalerank
     FROM osm_landuse_polygon_gen1
 );
 
 -- etldoc: osm_landuse_polygon -> landuse_z14
 CREATE OR REPLACE VIEW landuse_z14 AS (
-    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, NULL::int as scalerank
+    SELECT osm_id, geometry, landuse, amenity, leisure, tourism, place, NULL::int as scalerank
     FROM osm_landuse_polygon
 );
 
@@ -624,7 +635,8 @@ RETURNS TABLE(osm_id bigint, geometry geometry, class text) AS $$
             NULLIF(landuse, ''),
             NULLIF(amenity, ''),
             NULLIF(leisure, ''),
-            NULLIF(tourism, '')
+            NULLIF(tourism, ''),
+            NULLIF(place, '')
         ) AS class
         FROM (
         -- etldoc: landuse_z4 -> layer_landuse:z4
@@ -944,7 +956,6 @@ CREATE OR REPLACE VIEW boundary_z1 AS (
     UNION ALL
     SELECT geometry, 4 AS admin_level, false AS disputed, false AS maritime
     FROM ne_50m_admin_1_states_provinces_lines
-    WHERE scalerank <= 2
 );
 
 
@@ -971,29 +982,19 @@ CREATE OR REPLACE VIEW boundary_z4 AS (
     UNION ALL
     SELECT geometry, 4 AS admin_level, false AS disputed, false AS maritime
     FROM ne_10m_admin_1_states_provinces_lines
-    WHERE scalerank <= 3 AND min_zoom <= 7
+    WHERE min_zoom <= 5
     UNION ALL
     SELECT geometry, admin_level, disputed, maritime
     FROM osm_border_linestring_gen10
     WHERE maritime=true AND admin_level <= 2
 );
 
--- etldoc: ne_10m_admin_0_boundary_lines_land -> boundary_z5
--- etldoc: ne_10m_admin_1_states_provinces_lines -> boundary_z5
 -- etldoc: osm_border_linestring_gen9 -> boundary_z5
 
 CREATE OR REPLACE VIEW boundary_z5 AS (
-    SELECT geometry, 2 AS admin_level, false AS disputed, false AS maritime
-    FROM ne_10m_admin_0_boundary_lines_land
-    WHERE featurecla <> 'Lease limit'
-    UNION ALL
-    SELECT geometry, 4 AS admin_level, false AS disputed, false AS maritime
-    FROM ne_10m_admin_1_states_provinces_lines
-    WHERE scalerank <= 7 AND min_zoom <= 8
-    UNION ALL
     SELECT geometry, admin_level, disputed, maritime
     FROM osm_border_linestring_gen9
-    WHERE maritime=true AND admin_level <= 2
+    WHERE admin_level <= 4
 );
 
 -- etldoc: osm_border_linestring_gen8 -> boundary_z6
@@ -1183,6 +1184,16 @@ CREATE OR REPLACE FUNCTION service_value(service TEXT) RETURNS TEXT AS $$
         ELSE NULL
     END;
 $$ LANGUAGE SQL IMMUTABLE STRICT;
+
+-- Limit surface to only the most important values to ensure
+-- we always know the values of surface
+CREATE OR REPLACE FUNCTION surface_value(surface TEXT) RETURNS TEXT AS $$
+    SELECT CASE
+        WHEN surface IN ('paved', 'asphalt', 'cobblestone', 'concrete', 'concrete:lanes', 'concrete:plates', 'metal', 'paving_stones', 'sett', 'unhewn_cobblestone', 'wood') THEN 'paved'
+        WHEN surface IN ('unpaved', 'compacted', 'dirt', 'earth', 'fine_gravel', 'grass', 'grass_paver', 'gravel', 'gravel_turf', 'ground', 'ice', 'mud', 'pebblestone', 'salt', 'sand', 'snow', 'woodchips') THEN 'unpaved'
+        ELSE NULL
+    END;
+$$ LANGUAGE SQL IMMUTABLE STRICT;
 DROP MATERIALIZED VIEW IF EXISTS osm_transportation_merge_linestring CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS osm_transportation_merge_linestring_gen3 CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS osm_transportation_merge_linestring_gen4 CASCADE;
@@ -1338,7 +1349,7 @@ $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE OR REPLACE FUNCTION layer_transportation(bbox geometry, zoom_level int)
 RETURNS TABLE(osm_id bigint, geometry geometry, class text, subclass text,
 ramp int, oneway int, brunnel TEXT, service TEXT, layer INT, level INT,
-indoor INT) AS $$
+indoor INT, surface TEXT) AS $$
     SELECT
         osm_id, geometry,
         CASE
@@ -1363,7 +1374,8 @@ indoor INT) AS $$
         NULLIF(service, '') AS service,
         NULLIF(layer, 0) AS layer,
         "level",
-        CASE WHEN indoor=TRUE THEN 1 ELSE NULL END as indoor
+        CASE WHEN indoor=TRUE THEN 1 ELSE NULL END as indoor,
+        NULLIF(surface, '') AS surface
     FROM (
         -- etldoc: osm_transportation_merge_linestring_gen7 -> layer_transportation:z4
         SELECT
@@ -1374,6 +1386,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             NULL::int AS layer, NULL::int AS level, NULL::boolean AS indoor,
+	    NULL AS surface,
             z_order
         FROM osm_transportation_merge_linestring_gen7
         WHERE zoom_level = 4
@@ -1388,7 +1401,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             NULL::int AS layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_transportation_merge_linestring_gen6
         WHERE zoom_level = 5
         UNION ALL
@@ -1402,7 +1415,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             NULL::int AS layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_transportation_merge_linestring_gen5
         WHERE zoom_level = 6
         UNION ALL
@@ -1416,7 +1429,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             NULL::int AS layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_transportation_merge_linestring_gen4
         WHERE zoom_level = 7
         UNION ALL
@@ -1430,7 +1443,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             NULL::int AS layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_transportation_merge_linestring_gen3
         WHERE zoom_level = 8
         UNION ALL
@@ -1445,7 +1458,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_highway_linestring_gen2
         WHERE zoom_level BETWEEN 9 AND 10
           AND st_length(geometry)>zres(11)
@@ -1460,7 +1473,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_highway_linestring_gen1
         WHERE zoom_level = 11
           AND st_length(geometry)>zres(12)
@@ -1481,6 +1494,7 @@ indoor INT) AS $$
             CASE WHEN highway IN ('footway', 'steps') THEN indoor
                 ELSE NULL::boolean
             END AS indoor,
+            surface_value(surface) AS "surface",
             z_order
         FROM osm_highway_linestring
         WHERE NOT is_area AND (
@@ -1512,7 +1526,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             NULL::int AS layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+	    NULL as surface, z_order
         FROM osm_railway_linestring_gen5
         WHERE zoom_level = 8
             AND railway='rail' AND service = '' and usage='main'
@@ -1527,7 +1541,7 @@ indoor INT) AS $$
             NULL::boolean AS is_ford,
             NULL::boolean AS is_ramp, NULL::int AS is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+	    NULL AS surface, z_order
         FROM osm_railway_linestring_gen4
         WHERE zoom_level = 9
             AND railway='rail' AND service = '' and usage='main'
@@ -1540,7 +1554,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_railway_linestring_gen3
         WHERE zoom_level = 10
             AND railway IN ('rail', 'narrow_gauge') AND service = ''
@@ -1553,7 +1567,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL as surface, z_order
         FROM osm_railway_linestring_gen2
         WHERE zoom_level = 11
             AND railway IN ('rail', 'narrow_gauge', 'light_rail') AND service = ''
@@ -1566,7 +1580,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL as surface, z_order
         FROM osm_railway_linestring_gen1
         WHERE zoom_level = 12
             AND railway IN ('rail', 'narrow_gauge', 'light_rail') AND service = ''
@@ -1580,7 +1594,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL as surface, z_order
         FROM osm_railway_linestring
         WHERE zoom_level = 13
                 AND railway IN ('rail', 'narrow_gauge', 'light_rail') AND service = ''
@@ -1594,7 +1608,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_aerialway_linestring_gen1
         WHERE zoom_level = 12
         UNION ALL
@@ -1607,7 +1621,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_aerialway_linestring
         WHERE zoom_level >= 13
         UNION ALL
@@ -1619,7 +1633,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_shipway_linestring_gen2
         WHERE zoom_level = 11
         UNION ALL
@@ -1631,7 +1645,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_shipway_linestring_gen1
         WHERE zoom_level = 12
         UNION ALL
@@ -1644,7 +1658,7 @@ indoor INT) AS $$
             NULL AS public_transport, service_value(service) AS service,
             is_bridge, is_tunnel, is_ford, is_ramp, is_oneway, NULL as man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_shipway_linestring
         WHERE zoom_level >= 13
         UNION ALL
@@ -1664,7 +1678,7 @@ indoor INT) AS $$
             END AS is_bridge, FALSE AS is_tunnel, FALSE AS is_ford,
             FALSE AS is_ramp, FALSE::int AS is_oneway, man_made,
             layer, NULL::int AS level, NULL::boolean AS indoor,
-            z_order
+            NULL AS surface, z_order
         FROM osm_highway_polygon
         -- We do not want underground pedestrian areas for now
         WHERE zoom_level >= 13
@@ -1681,7 +1695,7 @@ $$ LANGUAGE SQL IMMUTABLE;
 CREATE OR REPLACE FUNCTION layer_transportation_lite(bbox geometry, zoom_level int)
 RETURNS TABLE(osm_id bigint, geometry geometry, class text, subclass text,
 ramp int, oneway int, brunnel TEXT, service TEXT, layer INT, level INT,
-indoor INT) AS $$
+indoor INT, surface TEXT) AS $$
     SELECT * FROM layer_transportation(bbox, zoom_level)
         WHERE zoom_level < 13
     UNION ALL
@@ -1716,6 +1730,8 @@ CREATE OR REPLACE VIEW osm_all_buildings AS (
                   COALESCE(nullif(as_numeric(min_height),-1),nullif(as_numeric(buildingmin_height),-1)) as min_height,
                   COALESCE(nullif(as_numeric(levels),-1),nullif(as_numeric(buildinglevels),-1)) as levels,
                   COALESCE(nullif(as_numeric(min_level),-1),nullif(as_numeric(buildingmin_level),-1)) as min_level,
+                  nullif(material, '') AS material,
+                  nullif(colour, '') AS colour,
                   FALSE as hide_3d
          FROM
          osm_building_relation WHERE building = ''
@@ -1728,6 +1744,8 @@ CREATE OR REPLACE VIEW osm_all_buildings AS (
                   COALESCE(nullif(as_numeric(min_height),-1),nullif(as_numeric(buildingmin_height),-1)) as min_height,
                   COALESCE(nullif(as_numeric(levels),-1),nullif(as_numeric(buildinglevels),-1)) as levels,
                   COALESCE(nullif(as_numeric(min_level),-1),nullif(as_numeric(buildingmin_level),-1)) as min_level,
+                  nullif(material, '') AS material,
+                  nullif(colour, '') AS colour,
                   FALSE as hide_3d
          FROM
          osm_building_associatedstreet WHERE role = 'house'
@@ -1739,6 +1757,8 @@ CREATE OR REPLACE VIEW osm_all_buildings AS (
                   COALESCE(nullif(as_numeric(min_height),-1),nullif(as_numeric(buildingmin_height),-1)) as min_height,
                   COALESCE(nullif(as_numeric(levels),-1),nullif(as_numeric(buildinglevels),-1)) as levels,
                   COALESCE(nullif(as_numeric(min_level),-1),nullif(as_numeric(buildingmin_level),-1)) as min_level,
+                  nullif(material, '') AS material,
+                  nullif(colour, '') AS colour,
                   FALSE as hide_3d
          FROM
          osm_building_street WHERE role = 'house'
@@ -1751,6 +1771,8 @@ CREATE OR REPLACE VIEW osm_all_buildings AS (
                   COALESCE(nullif(as_numeric(min_height),-1),nullif(as_numeric(buildingmin_height),-1)) as min_height,
                   COALESCE(nullif(as_numeric(levels),-1),nullif(as_numeric(buildinglevels),-1)) as levels,
                   COALESCE(nullif(as_numeric(min_level),-1),nullif(as_numeric(buildingmin_level),-1)) as min_level,
+                  nullif(material, '') AS material,
+                  nullif(colour, '') AS colour,
                   FALSE as hide_3d
          FROM
          osm_building_polygon obp WHERE EXISTS (SELECT 1 FROM osm_building_multipolygon obm WHERE obp.osm_id = obm.osm_id)
@@ -1762,6 +1784,8 @@ CREATE OR REPLACE VIEW osm_all_buildings AS (
                   COALESCE(nullif(as_numeric(obp.min_height),-1),nullif(as_numeric(obp.buildingmin_height),-1)) as min_height,
                   COALESCE(nullif(as_numeric(obp.levels),-1),nullif(as_numeric(obp.buildinglevels),-1)) as levels,
                   COALESCE(nullif(as_numeric(obp.min_level),-1),nullif(as_numeric(obp.buildingmin_level),-1)) as min_level,
+                  nullif(obp.material, '') AS material,
+                  nullif(obp.colour, '') AS colour,
                   CASE WHEN obr.role='outline' THEN TRUE ELSE FALSE END as hide_3d
          FROM
          osm_building_polygon obp
@@ -1772,15 +1796,46 @@ CREATE OR REPLACE VIEW osm_all_buildings AS (
 );
 
 CREATE OR REPLACE FUNCTION layer_building(bbox geometry, zoom_level int)
-RETURNS TABLE(geometry geometry, osm_id bigint, render_height int, render_min_height int, hide_3d boolean) AS $$
+RETURNS TABLE(geometry geometry, osm_id bigint, render_height int, render_min_height int, colour text, hide_3d boolean) AS $$
     SELECT geometry, osm_id, render_height, render_min_height,
+       COALESCE(colour, CASE material
+           -- Ordered by count from taginfo
+           WHEN 'cement_block' THEN '#6a7880'
+           WHEN 'brick' THEN '#bd8161'
+           WHEN 'plaster' THEN '#dadbdb'
+           WHEN 'wood' THEN '#d48741'
+           WHEN 'concrete' THEN '#d3c2b0'
+           WHEN 'metal' THEN '#b7b1a6'
+           WHEN 'stone' THEN '#b4a995'
+           WHEN 'mud' THEN '#9d8b75'
+           WHEN 'steel' THEN '#b7b1a6' -- same as metal
+           WHEN 'glass' THEN '#5a81a0'
+           WHEN 'traditional' THEN '#bd8161' -- same as brick
+           WHEN 'masonry' THEN '#bd8161' -- same as brick
+           WHEN 'Brick' THEN '#bd8161' -- same as brick
+           WHEN 'tin' THEN '#b7b1a6' -- same as metal
+           WHEN 'timber_framing' THEN '#b3b0a9'
+           WHEN 'sandstone' THEN '#b4a995' -- same as stone
+           WHEN 'clay' THEN '#9d8b75' -- same as mud
+       END) AS colour,
       CASE WHEN hide_3d THEN TRUE ELSE NULL::boolean END AS hide_3d
     FROM (
+        -- etldoc: osm_building_polygon_gen1 -> layer_building:z13
+        SELECT
+            osm_id, geometry,
+            NULL::int AS render_height, NULL::int AS render_min_height,
+            NULL::text AS material, NULL::text AS colour,
+            FALSE AS hide_3d
+        FROM osm_building_polygon_gen1
+        WHERE zoom_level = 13 AND geometry && bbox
+        UNION ALL
         -- etldoc: osm_building_polygon -> layer_building:z14_
         SELECT DISTINCT ON (osm_id)
            osm_id, geometry,
            ceil( COALESCE(height, levels*3.66,5))::int AS render_height,
            floor(COALESCE(min_height, min_level*3.66,0))::int AS render_min_height,
+           material,
+           colour,
            hide_3d
         FROM osm_all_buildings
         WHERE
@@ -1821,7 +1876,7 @@ BEGIN
   -- etldoc: osm_marine_point              -> osm_marine_point
 
   WITH important_marine_point AS (
-      SELECT osm.geometry, osm.osm_id, osm.name, osm.name_en, ne.scalerank
+      SELECT osm.geometry, osm.osm_id, osm.name, osm.name_en, ne.scalerank, osm.is_intermittent
       FROM ne_10m_geography_marine_polys AS ne, osm_marine_point AS osm
       WHERE trim(regexp_replace(ne.name, '\\s+', ' ', 'g')) ILIKE osm.name
         OR trim(regexp_replace(ne.name, '\\s+', ' ', 'g')) ILIKE osm.tags->'name:en'
@@ -1888,7 +1943,8 @@ CREATE MATERIALIZED VIEW osm_water_lakeline AS (
 		ll.wkb_geometry AS geometry,
 		name, name_en, name_de,
 		update_tags(tags, ll.wkb_geometry) AS tags,
-		ST_Area(wp.geometry) AS area
+		ST_Area(wp.geometry) AS area,
+		is_intermittent
     FROM osm_water_polygon AS wp
     INNER JOIN lake_centerline ll ON wp.osm_id = ll.osm_id
     WHERE wp.name <> '' AND ST_IsValid(wp.geometry)
@@ -1937,10 +1993,11 @@ DROP MATERIALIZED VIEW IF EXISTS  osm_water_point CASCADE;
 
 CREATE MATERIALIZED VIEW osm_water_point AS (
     SELECT
-        wp.osm_id, ST_PointOnSurface(wp.geometry) AS geometry,
+        wp.osm_id, ST_PointOnSurface(ST_MakeValid(wp.geometry)) AS geometry,
         wp.name, wp.name_en, wp.name_de,
-        update_tags(wp.tags, ST_PointOnSurface(wp.geometry)) AS tags,
-        ST_Area(wp.geometry) AS area
+        update_tags(wp.tags, ST_PointOnSurface(ST_MakeValid(wp.geometry))) AS tags,
+        ST_Area(wp.geometry) AS area,
+        wp.is_intermittent
     FROM osm_water_polygon AS wp
     LEFT JOIN lake_centerline ll ON wp.osm_id = ll.osm_id
     WHERE ll.osm_id IS NULL AND wp.name <> ''
@@ -1985,7 +2042,7 @@ CREATE CONSTRAINT TRIGGER trigger_refresh
 -- etldoc:     label="layer_water_name | <z0_8> z0_8 | <z9_13> z9_13 | <z14_> z14+" ] ;
 
 CREATE OR REPLACE FUNCTION layer_water_name(bbox geometry, zoom_level integer)
-RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de text, tags hstore, class text) AS $$
+RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de text, tags hstore, class text, intermittent int) AS $$
     -- etldoc: osm_water_lakeline ->  layer_water_name:z9_13
     -- etldoc: osm_water_lakeline ->  layer_water_name:z14_
     SELECT
@@ -1996,7 +2053,8 @@ RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de
     COALESCE(NULLIF(name_en, ''), name) AS name_en,
     COALESCE(NULLIF(name_de, ''), name, name_en) AS name_de,
     tags,
-    'lake'::text AS class
+    'lake'::text AS class,
+    is_intermittent::int AS intermittent
     FROM osm_water_lakeline
     WHERE geometry && bbox
       AND ((zoom_level BETWEEN 9 AND 13 AND LineLabel(zoom_level, NULLIF(name, ''), geometry))
@@ -2012,7 +2070,8 @@ RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de
     COALESCE(NULLIF(name_en, ''), name) AS name_en,
     COALESCE(NULLIF(name_de, ''), name, name_en) AS name_de,
     tags,
-    'lake'::text AS class
+    'lake'::text AS class,
+    is_intermittent::int AS intermittent
     FROM osm_water_point
     WHERE geometry && bbox AND (
         (zoom_level BETWEEN 9 AND 13 AND area > 70000*2^(20-zoom_level))
@@ -2026,7 +2085,8 @@ RETURNS TABLE(osm_id bigint, geometry geometry, name text, name_en text, name_de
     COALESCE(NULLIF(name_en, ''), name) AS name_en,
     COALESCE(NULLIF(name_de, ''), name, name_en) AS name_de,
     tags,
-    place::text AS class
+    place::text AS class,
+    is_intermittent::int AS intermittent
     FROM osm_marine_point
     WHERE geometry && bbox AND (
         place = 'ocean'
@@ -2706,7 +2766,7 @@ DROP TRIGGER IF EXISTS trigger_refresh ON place_island_polygon.updates;
 -- etldoc:  osm_island_polygon ->  osm_island_polygon
 CREATE OR REPLACE FUNCTION update_osm_island_polygon() RETURNS VOID AS $$
 BEGIN
-  UPDATE osm_island_polygon  SET geometry=ST_PointOnSurface(geometry) WHERE ST_GeometryType(geometry) <> 'ST_Point';
+  UPDATE osm_island_polygon  SET geometry=ST_PointOnSurface(ST_MakeValid(geometry)) WHERE ST_GeometryType(geometry) <> 'ST_Point';
 
   UPDATE osm_island_polygon
   SET tags = update_tags(tags, geometry)

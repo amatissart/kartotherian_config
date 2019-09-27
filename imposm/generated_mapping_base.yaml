@@ -108,7 +108,7 @@ tables:
     - &id019 {key: service, name: service, type: string}
     - &id020 {key: usage, name: usage, type: string}
     mapping:
-      aerialway: [cable_car]
+      aerialway: [cable_car, gondola]
     type: linestring
   aerodrome_label_point:
     fields:
@@ -158,6 +158,8 @@ tables:
     - {name: area, type: area}
     - {name: webmerc_area, type: webmerc_area}
     - {from_member: true, key: building, name: building, type: string}
+    - {key: 'building:material', name: material, type: string}
+    - {key: 'building:colour', name: colour, type: string}
     - {from_member: true, key: 'building:part', name: buildingpart, type: string}
     - {from_member: true, key: 'building:height', name: buildingheight, type: string}
     - {from_member: true, key: height, name: height, type: string}
@@ -189,6 +191,8 @@ tables:
     - {name: area, type: area}
     - {name: webmerc_area, type: webmerc_area}
     - {from_member: true, key: building, name: building, type: string}
+    - {key: 'building:material', name: material, type: string}
+    - {key: 'building:colour', name: colour, type: string}
     - {from_member: true, key: 'building:part', name: buildingpart, type: string}
     - {from_member: true, key: 'building:height', name: buildingheight, type: string}
     - {from_member: true, key: height, name: height, type: string}
@@ -216,6 +220,8 @@ tables:
     - {name: geometry, type: validated_geometry}
     - {name: area, type: area}
     - {name: webmerc_area, type: webmerc_area}
+    - {key: 'building:material', name: material, type: string}
+    - {key: 'building:colour', name: colour, type: string}
     - {key: building, name: building, type: string}
     - {key: 'building:part', name: buildingpart, type: string}
     - {key: 'building:height', name: buildingheight, type: string}
@@ -243,6 +249,8 @@ tables:
     - {name: area, type: area}
     - {name: webmerc_area, type: webmerc_area}
     - {from_member: true, key: building, name: building, type: string}
+    - {key: 'building:material', name: material, type: string}
+    - {key: 'building:colour', name: colour, type: string}
     - {from_member: true, key: 'building:part', name: buildingpart, type: string}
     - {from_member: true, key: 'building:height', name: buildingheight, type: string}
     - {from_member: true, key: height, name: height, type: string}
@@ -274,6 +282,8 @@ tables:
     - {name: area, type: area}
     - {name: webmerc_area, type: webmerc_area}
     - {from_member: true, key: building, name: building, type: string}
+    - {key: 'building:material', name: material, type: string}
+    - {key: 'building:colour', name: colour, type: string}
     - {from_member: true, key: 'building:part', name: buildingpart, type: string}
     - {from_member: true, key: 'building:height', name: buildingheight, type: string}
     - {from_member: true, key: height, name: height, type: string}
@@ -375,6 +385,7 @@ tables:
     - *id020
     - &id023 {key: public_transport, name: public_transport, type: string}
     - &id024 {key: man_made, name: man_made, type: string}
+    - {key: surface, name: surface, type: string}
     mapping:
       highway: [motorway, motorway_link, trunk, trunk_link, primary, primary_link,
         secondary, secondary_link, tertiary, tertiary_link, unclassified, residential,
@@ -458,13 +469,15 @@ tables:
     - {key: amenity, name: amenity, type: string}
     - {key: leisure, name: leisure, type: string}
     - {key: tourism, name: tourism, type: string}
+    - {key: place, name: place, type: string}
     - {name: area, type: area}
     - {name: webmerc_area, type: webmerc_area}
     mapping:
       amenity: [bus_station, school, university, kindergarten, college, library, hospital]
       landuse: [railway, cemetery, military, residential, commercial, industrial,
         retail]
-      leisure: [stadium, pitch, playground]
+      leisure: [stadium, pitch, playground, track]
+      place: [suburb, neighbourhood]
       tourism: [theme_park, zoo]
     type: polygon
   marine_point:
@@ -477,6 +490,7 @@ tables:
     - {name: tags, type: hstore_tags}
     - {key: place, name: place, type: string}
     - {key: rank, name: rank, type: integer}
+    - {key: intermittent, name: is_intermittent, type: bool}
     filters:
       require:
         name: [__any__]
@@ -530,7 +544,6 @@ tables:
     type: linestring
   route_member:
     columns:
-    - {name: osm_id, type: id}
     - {name: member, type: member_id}
     - {name: role, type: member_role}
     - {name: type, type: member_type}
@@ -594,6 +607,7 @@ tables:
     - {key: natural, name: natural, type: string}
     - {key: landuse, name: landuse, type: string}
     - {key: waterway, name: waterway, type: string}
+    - {key: intermittent, name: is_intermittent, type: bool}
     filters:
       reject:
         covered: ['yes']
@@ -613,6 +627,7 @@ tables:
     - {name: tags, type: hstore_tags}
     - {key: tunnel, name: is_tunnel, type: bool}
     - {key: bridge, name: is_bridge, type: bool}
+    - {key: intermittent, name: is_intermittent, type: bool}
     mapping:
       waterway: [stream, river, canal, drain, ditch]
     type: linestring
